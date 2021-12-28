@@ -44,8 +44,16 @@ MbedApplication& CandidateApplications::getMbedApplication(uint32_t slotIndex) {
 }
 
 uint32_t CandidateApplications::getSlotForCandidate() { 
-  
-  return 0;
+    uint64_t oldest_firmware = UINT64_MAX, oldest_slot = 0;
+    for(int i = 0; i < m_nbrOfSlots; ++i) {
+        if (!m_candidateApplicationArray[i]->isValid()) {
+            return i;
+        } else if (m_candidateApplicationArray[i]->getFirmwareVersion() < oldest_firmware) {
+            oldest_firmware = m_candidateApplicationArray[i]->getFirmwareVersion();
+            oldest_slot = i;
+        }
+    }
+    return oldest_slot;
 }
 
 int32_t CandidateApplications::getApplicationAddress(uint32_t slotIndex, uint32_t& applicationAddress, uint32_t& slotSize) const {
@@ -110,7 +118,7 @@ bool CandidateApplications::hasValidNewerApplication(MbedApplication& activeAppl
 
       // update the newest slot index
       newestSlotIndex = slotIndex;
-    }
+    } 
   }
   return newestSlotIndex != m_nbrOfSlots;
 }
@@ -148,6 +156,8 @@ int32_t CandidateApplications::installApplication(uint32_t slotIndex, uint32_t d
   
   while (nbrOfBytes < copySize) {
     // TODO: read a page from the candidate location and write it to the active application
+    m_flashUpdater.readPage(pageSize, readPageBuffer.get(), sourceAddr);
+    m_flashUpdater.writePage(pageSize, writePageBuffer.get(), readPageBuffer.get(), destAddr, destSectorErased, destPagesFlashed, nextDestSectorAddress);
 
     // update progress
     nbrOfBytes += pageSize;    

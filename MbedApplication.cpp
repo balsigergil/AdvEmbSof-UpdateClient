@@ -80,6 +80,7 @@ bool MbedApplication::isNewerThan(MbedApplication& otherApplication) {
   if (m_applicationHeader.headerVersion < HEADER_VERSION_V2 ||
       m_applicationHeader.firmwareSize == 0 ||
       m_applicationHeader.state == NOT_VALID) {
+    tr_debug("App not valid");
     return false;
   }
   // if the other application is not valid or empty, this one is newer
@@ -89,6 +90,7 @@ bool MbedApplication::isNewerThan(MbedApplication& otherApplication) {
     return true;
   }
   
+  tr_debug("App valid");
   // both applications are valid and not empty
   return otherApplication.m_applicationHeader.firmwareVersion < m_applicationHeader.firmwareVersion;
 }
@@ -141,16 +143,19 @@ int32_t MbedApplication::checkApplication() {
 
     // compare calculated hash with hash from header
     int diff = memcmp(m_applicationHeader.hash, SHA, SIZEOF_SHA256);
+    tr_debug("Application header hash: %s", m_applicationHeader.hash);
 
     if (diff == 0) {
       result = UC_ERR_NONE;
     }
     else {
+        tr_err("Invalid hash for app at address %08x", m_applicationAddress);
       result = UC_ERR_HASH_INVALID;
     }
   } 
   else {
     // header is valid but application size is 0
+    tr_err("Firmware empty for app at address %08x", m_applicationAddress);
     result = UC_ERR_FIRMWARE_EMPTY;
   }
   if (result == UC_ERR_NONE) {
