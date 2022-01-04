@@ -12,6 +12,8 @@
 namespace update_client {
 
 
+#if defined(UPDATE_DOWNLOAD)
+
 USBSerialUC::USBSerialUC() :
   m_usbSerial(false) {
   
@@ -101,9 +103,6 @@ void USBSerialUC::downloadFirmware() {
       uint32_t activeApplicationAddress = activeApplicationHeaderAddress + headerSize;
       update_client::MbedApplication activeApplication(flashUpdater, activeApplicationHeaderAddress, activeApplicationAddress);
 
-      tr_debug("Active app address: 0x%08x", activeApplicationAddress);
-      tr_debug("Candidate app address: 0x%08x", candidateApplicationAddress + headerSize);
-
       update_client::MbedApplication candidateApplication(flashUpdater, candidateApplicationAddress, candidateApplicationAddress + headerSize);
       activeApplication.compareTo(candidateApplication);
     
@@ -120,5 +119,7 @@ void USBSerialUC::downloadFirmware() {
   }
 
 }
+
+#endif
 
 }

@@ -261,14 +261,17 @@ int32_t MbedApplication::readApplicationHeader() {
         }
 
         switch (m_applicationHeader.headerVersion) {
-        case HEADER_VERSION_V2:
-            result = parseInternalHeaderV2(m_buffer);
-            break;
-        // Other firmware header versions can be supported here
-        default:
-            tr_error("Header version not supported");
-            result = UC_ERR_INVALID_HEADER;
-            break;
+            case HEADER_VERSION_V2:
+                result = parseInternalHeaderV2(m_buffer);
+                if (result != UC_ERR_NONE) {
+                  tr_error(" Failed to parse header: %d", result);
+                }
+                break;
+            // Other firmware header versions can be supported here
+            default:
+                tr_error("Header version not supported");
+                result = UC_ERR_INVALID_HEADER;
+                break;
         }
     } else {
         tr_error("Bad magic number");

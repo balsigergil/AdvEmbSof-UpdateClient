@@ -156,13 +156,22 @@ int32_t CandidateApplications::installApplication(uint32_t slotIndex, uint32_t d
   
   while (nbrOfBytes < copySize) {
     // TODO: read a page from the candidate location and write it to the active application
-    m_flashUpdater.readPage(pageSize, readPageBuffer.get(), sourceAddr);
+    result = m_flashUpdater.readPage(pageSize, writePageBuffer.get(), sourceAddr);
+    if (result != UC_ERR_NONE) {
+      tr_error("Error while reading candidate. (slot:  %d, address: 0x%08x)", slotIndex, sourceAddr);
+      return result;
+    }
+
     m_flashUpdater.writePage(pageSize, writePageBuffer.get(), readPageBuffer.get(), destAddr, destSectorErased, destPagesFlashed, nextDestSectorAddress);
+    if (result != UC_ERR_NONE) {
+      tr_error("Error while writing candidate. (slot:  %d, address: 0x%08x)", slotIndex, sourceAddr);
+      return result;
+    }
 
     // update progress
     nbrOfBytes += pageSize;    
 #if MBED_CONF_MBED_TRACE_ENABLE
-    // tr_debug("Copied %05d bytes", nbrOfBytes);
+    tr_debug("Copied %05d bytes", nbrOfBytes);
 #endif
   }
   tr_debug(" Copied %d bytes", nbrOfBytes);
