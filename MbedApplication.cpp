@@ -143,7 +143,7 @@ int32_t MbedApplication::checkApplication() {
 
     // compare calculated hash with hash from header
     int diff = memcmp(m_applicationHeader.hash, SHA, SIZEOF_SHA256);
-    tr_debug("Application header hash: %s", m_applicationHeader.hash);
+    //tr_debug("Application header hash: %s", m_applicationHeader.hash);
 
     if (diff == 0) {
       result = UC_ERR_NONE;
@@ -170,11 +170,14 @@ int32_t MbedApplication::checkApplication() {
 void MbedApplication::compareTo(MbedApplication& otherApplication) {
   tr_debug(" Comparing applications at address 0x%08x and 0x%08x", m_applicationAddress, otherApplication.m_applicationAddress);
   
+  tr_debug(" Checking active application...");
   int32_t result = checkApplication();
   if (result != UC_ERR_NONE) {
     tr_error(" Application not valid");
     return;
   }
+
+  tr_debug(" Checking other application...");
   result = otherApplication.checkApplication();
   if (result != UC_ERR_NONE) {
     tr_error(" Other application not valid");
@@ -254,32 +257,35 @@ int32_t MbedApplication::readApplicationHeader() {
     
     // choose version to decode 
     if (m_applicationHeader.magic == HEADER_MAGIC_V2) {
-        int err = m_flashUpdater.read(m_buffer, HEADER_ADDR, BUFFER_SIZE);
-        if (err != 0) {
-            tr_err("Unable to read header to buffer");
-            return UC_ERR_INVALID_HEADER;
-        }
+        
 
         switch (m_applicationHeader.headerVersion) {
-            case HEADER_VERSION_V2:
-                result = parseInternalHeaderV2(m_buffer);
+            case HEADER_VERSION_V2: {
+                uint8_t read_buffer[HEADER_SIZE_V2] = { 0 };
+                err = m_flashUpdater.read(read_buffer, m_applicationHeaderAddress, HEADER_SIZE_V2);
+                if (err != 0) {
+                    tr_error(" Unable to read header to buffer");
+                    break;
+                }
+                result = parseInternalHeaderV2(read_buffer);
                 if (result != UC_ERR_NONE) {
                   tr_error(" Failed to parse header: %d", result);
                 }
                 break;
+            } 
             // Other firmware header versions can be supported here
             default:
-                tr_error("Header version not supported");
+                tr_error(" Header version not supported");
                 result = UC_ERR_INVALID_HEADER;
                 break;
         }
     } else {
-        tr_error("Bad magic number");
+        tr_error(" Bad magic number");
         result = UC_ERR_INVALID_HEADER;
     }
   } 
   else {
-    tr_error("Flash read failed: %d", err);
+    tr_error(" Flash read failed: %d", err);
     result = UC_ERR_READING_FLASH;
   }
 
@@ -318,8 +324,7 @@ int32_t MbedApplication::parseInternalHeaderV2(const uint8_t *pBuffer) {
 
       // set result
       result = UC_ERR_NONE;
-    }
-    else {
+    } else {
       result = UC_ERR_INVALID_CHECKSUM;
     }
   }

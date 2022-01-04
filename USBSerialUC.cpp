@@ -69,7 +69,8 @@ void USBSerialUC::downloadFirmware() {
                                                                  headerSize,
                                                                  MBED_CONF_UPDATE_CLIENT_STORAGE_LOCATIONS);
       
-      int slotIndex = candidateApplications.getSlotForCandidate();                                                                             
+      int slotIndex = candidateApplications.getSlotForCandidate();
+      tr_debug("Slot chosen: %d", slotIndex);                                                                  
       int32_t result = candidateApplications.getApplicationAddress(slotIndex, candidateApplicationAddress, slotSize);
       uint32_t addr = candidateApplicationAddress; 
       uint32_t sectorSize = flashUpdater.get_sector_size(addr);
